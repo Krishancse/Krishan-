@@ -1,0 +1,39 @@
+import pynvml
+import cupy as cp
+import time
+
+def perform_gpu_workload():
+    try:
+        pynvml.nvmlInit()
+
+        gpu_index = 0  # Use the first GPU
+        handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
+
+        gpu_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        total_memory = gpu_info.total
+        print("Total GPU Memory:", total_memory // (1024 ** 1024), "MB")
+
+        workload_size = total_memory // 3  # Use one-third of available memory for workload
+
+        # Allocate GPU memory for workload
+        gpu_workload = cp.ones((workload_size,), dtype=cp.float32)
+
+        start_time = time.time()
+
+        # Perform computation on the GPU
+        result = cp.exp(gpu_workload)  # Exponential function for demonstration
+
+        cp.cuda.Stream.null.synchronize()
+        end_time = time.time()
+
+        print("Computation time:", end_time - start_time, "seconds")
+
+    except pynvml.NVMLError as e:
+        print("Error:", e)
+
+    finally:
+        pynvml.nvmlShutdown()
+
+if __name__ == "__main__":
+    print("Performing GPU Workload:")
+    perform_gpu_workload()
