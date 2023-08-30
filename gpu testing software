@@ -1,0 +1,49 @@
+import pynvml
+import pycuda.autoinit
+import pycuda.driver as cuda
+import numpy as np
+import time
+
+def test_gpu_memory():
+    try:
+        pynvml.nvmlInit()
+
+        gpu_index = 0  # Use the first GPU
+        handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
+
+        memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        print("Total GPU Memory:", memory_info.total // (1024 ** 1024), "MB")
+        print("Free GPU Memory:", memory_info.free // (1024 ** 1024), "MB")
+        print("Used GPU Memory:", memory_info.used // (1024 ** 1024), "MB")
+
+    except pynvml.NVMLError as e:
+        print("Error:", e)
+
+    finally:
+        pynvml.nvmlShutdown()
+
+def test_gpu_computation():
+    array_size = 1000000
+    data = np.random.random(array_size).astype(np.float32)
+
+    device_data = cuda.to_device(data)
+    result = cuda.device_array_like(device_data)
+
+    start_time = time.time()
+
+    # Perform a simple computation (vector addition)
+    cuda.elementwise("float *in, float *out", "out[i] = in[i] + 1", "add_one")(device_data, result)
+
+    cuda.synchronize()
+    end_time = time.time()
+
+    result_host = result.copy_to_host()
+
+    print("Computation time:", end_time - start_time, "seconds")
+
+if __name__ == "__main__":
+    print("GPU Memory Test:")
+    test_gpu_memory()
+
+    print("\nGPU Computation Test:")
+    test_gpu_computation()
