@@ -1,0 +1,36 @@
+import pynvml
+import cupy as cp
+
+def test_gpu_memory():
+    try:
+        pynvml.nvmlInit()
+
+        gpu_index = 0  # Use the first GPU
+        handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
+
+        memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        total_memory = memory_info.total
+        print("Total GPU Memory:", total_memory // (1024 ** 1024), "MB")
+
+        test_data_size = total_memory // 2  # Test with half of available memory
+
+        # Allocate test data on GPU
+        test_data = cp.ones((test_data_size,), dtype=cp.uint8)
+
+        # Modify test data
+        test_data[0] = 0
+
+        # Trigger memory transfer to device
+        cp.cuda.Stream.null.synchronize()
+
+        print("Memory test passed.")
+
+    except pynvml.NVMLError as e:
+        print("Error:", e)
+
+    finally:
+        pynvml.nvmlShutdown()
+
+if __name__ == "__main__":
+    print("GPU Memory Test:")
+    test_gpu_memory()
