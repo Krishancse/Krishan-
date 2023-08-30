@@ -1,0 +1,68 @@
+class GraphicsCardMemory {
+    private boolean[] memoryData; // Simulated memory data
+    private boolean[] eccBits; // Simulated ECC bits
+
+    public GraphicsCardMemory(int dataSize) {
+        memoryData = new boolean[dataSize];
+        eccBits = new boolean[dataSize / 8]; // Simulated ECC bits for every 8 data bits
+    }
+
+    public void writeMemoryBit(int index, boolean value) {
+        if (index >= 0 && index < memoryData.length) {
+            memoryData[index] = value;
+        }
+    }
+
+    public void setECCBit(int index, boolean value) {
+        if (index >= 0 && index < eccBits.length) {
+            eccBits[index] = value;
+        }
+    }
+
+    public boolean readMemoryBit(int index) {
+        if (index >= 0 && index < memoryData.length) {
+            return memoryData[index];
+        }
+        return false; // Invalid index
+    }
+
+    public boolean getECCBit(int index) {
+        if (index >= 0 && index < eccBits.length) {
+            return eccBits[index];
+        }
+        return false; // Invalid index
+    }
+
+    public boolean isMemoryCorrect() {
+        // Simulated ECC error detection and correction logic
+        boolean errorDetected = false;
+        for (int i = 0; i < memoryData.length; i++) {
+            if (memoryData[i] != eccBits[i / 8]) {
+                errorDetected = true;
+                break;
+            }
+        }
+        return !errorDetected;
+    }
+}
+
+public class ECCGraphicsCardExample {
+    public static void main(String[] args) {
+        GraphicsCardMemory gpuMemory = new GraphicsCardMemory(32); // Simulated memory of size 32 bits
+
+        // Simulated data and ECC bit settings
+        for (int i = 0; i < 32; i++) {
+            gpuMemory.writeMemoryBit(i, i % 2 == 0);
+            gpuMemory.setECCBit(i / 8, i % 3 == 0);
+        }
+
+        // Simulated ECC error
+        gpuMemory.writeMemoryBit(15, !gpuMemory.readMemoryBit(15)); // Introduce an error
+
+        if (gpuMemory.isMemoryCorrect()) {
+            System.out.println("Graphics card memory is error-free.");
+        } else {
+            System.out.println("Graphics card memory has errors.");
+        }
+    }
+}
