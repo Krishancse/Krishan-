@@ -1,0 +1,53 @@
+Optimizing deep learning frameworks for hardware and GPUs involves configuring the framework to make effective use of GPU resources and applying techniques to accelerate computations. Below is a simple example of how you can set up TensorFlow to run on a GPU and enable mixed precision training for optimization.
+
+```python
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
+
+# Check if a GPU is available
+if tf.config.experimental.list_physical_devices('GPU'):
+    print('GPU available.')
+else:
+    print('No GPU available. Please check your TensorFlow installation.')
+
+# Enable mixed precision training
+policy = mixed_precision.Policy('mixed_float16')
+mixed_precision.set_policy(policy)
+
+# Create a simple neural network model
+model = Sequential([
+    Flatten(input_shape=(28, 28)),
+    Dense(128, activation='relu'),
+    Dense(64, activation='relu'),
+    Dense(10, activation='softmax')
+])
+
+# Compile the model with mixed precision optimizer
+opt = Adam(learning_rate=1e-3)
+model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
+# Load dataset (MNIST as an example)
+mnist = tf.keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# Train the model
+model.fit(x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test))
+
+# Convert the model to float32 for inference
+model = tf.keras.models.clone_model(model)
+model.set_weights(model.get_weights())
+```
+
+In this example:
+- We check if a GPU is available using TensorFlow's GPU detection functionality.
+- We enable mixed precision training using TensorFlow's mixed precision API to optimize GPU memory usage and computation.
+- We create a simple neural network model and compile it with an optimizer.
+- The model is trained on the MNIST dataset with mixed precision enabled.
+- Finally, we convert the trained model to float32 for inference.
+
+Remember that for more complex models and real-world optimization, you might need to consider data loading, distributed training, advanced GPU features, and additional optimization strategies.
+  Also, the availability of GPUs and their features can vary based on your hardware and TensorFlow installation.
